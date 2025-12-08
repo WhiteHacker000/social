@@ -12,6 +12,14 @@ import messageRouter from "./routes/message.routes.js"
 import { app, server } from "./socket.js"
 dotenv.config()
 
+// Log environment variables status
+console.log('Environment check:');
+console.log('- NODE_ENV:', process.env.NODE_ENV || 'development');
+console.log('- PORT:', process.env.PORT || '5000');
+console.log('- MONGODB_URL:', process.env.MONGODB_URL ? '✓ Set' : '✗ Missing');
+console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✓ Set' : '✗ Missing');
+console.log('- CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME ? '✓ Set' : '✗ Missing');
+
 const port=process.env.PORT || 5000
 const allowedOrigins = [
     "http://localhost:5173", 
