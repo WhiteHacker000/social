@@ -6,11 +6,18 @@ import { getSocketId, io } from "../socket.js";
 
 export const uploadPost = async (req, res) => {
     try {
+        console.log('uploadPost - userId:', req.userId);
+        console.log('uploadPost - has file:', !!req.file);
+        console.log('uploadPost - body:', req.body);
+
         const { caption, mediaType } = req.body
         let media;
         if (req.file) {
-            media = await uploadOnCloudinary(req.file.path)
+            console.log('Uploading to Cloudinary...');
+            media = await uploadOnCloudinary(req.file.buffer, req.file.mimetype)
+            console.log('Cloudinary URL:', media);
         } else {
+            console.log('No file provided');
             return res.status(400).json({ message: "media is required" })
         }
         const post = await Post.create({
@@ -20,9 +27,11 @@ export const uploadPost = async (req, res) => {
         user.posts.push(post._id)
         await user.save()
         const populatedPost = await Post.findById(post._id).populate("author", "name userName profileImage")
+        console.log('Post created successfully');
         return res.status(201).json(populatedPost)
     } catch (error) {
-        return res.status(500).json({ message: `uploadPost error ${error}` })
+        console.error('uploadPost error:', error);
+        return res.status(500).json({ message: `uploadPost error ${error.message}` })
     }
 }
 

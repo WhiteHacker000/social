@@ -4,6 +4,9 @@ import User from "../models/user.model.js"
 
 export const uploadStory = async (req, res) => {
     try {
+        console.log('uploadStory - userId:', req.userId);
+        console.log('uploadStory - has file:', !!req.file);
+        
         const user = await User.findById(req.userId)
         if (user.story) {
             await Story.findByIdAndDelete(user.story)
@@ -14,8 +17,11 @@ export const uploadStory = async (req, res) => {
 
         let media;
         if (req.file) {
-            media = await uploadOnCloudinary(req.file.path)
+            console.log('Uploading story to Cloudinary...');
+            media = await uploadOnCloudinary(req.file.buffer, req.file.mimetype)
+            console.log('Story Cloudinary URL:', media);
         } else {
+            console.log('No file provided for story');
             return res.status(400).json({ message: "media is required" })
         }
         const story = await Story.create({
@@ -25,9 +31,11 @@ export const uploadStory = async (req, res) => {
         await user.save()
         const populatedStory = await Story.findById(story._id).populate("author", "name userName profileImage")
             .populate("viewers", "name userName profileImage")
+        console.log('Story created successfully');
         return res.status(200).json(populatedStory)
     } catch (error) {
-        return res.status(500).json({ message: "story upload error" })
+        console.error('uploadStory error:', error);
+        return res.status(500).json({ message: `story upload error: ${error.message}` })
     }
 }
 

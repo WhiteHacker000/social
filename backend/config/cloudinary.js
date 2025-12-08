@@ -1,23 +1,35 @@
 import { v2 as cloudinary } from 'cloudinary'
-import fs from "fs"
-const uploadOnCloudinary=async (file)=>{
-    try {
-         cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key:process.env.CLOUDINARY_API_KEY, 
-  api_secret:process.env.CLOUDINARY_API_SECRET
+
+cloudinary.config({ 
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
+    api_key: process.env.CLOUDINARY_API_KEY, 
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
-const result=await cloudinary.uploader
-  .upload(file,{
-    resource_type:'auto',
-  })
-fs.unlinkSync(file)
-return result.secure_url
+
+const uploadOnCloudinary = async (fileBuffer, mimetype) => {
+    try {
+        return new Promise((resolve, reject) => {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    resource_type: 'auto',
+                    folder: 'social-media'
+                },
+                (error, result) => {
+                    if (error) {
+                        console.error('Cloudinary upload error:', error);
+                        reject(error);
+                    } else {
+                        console.log('Cloudinary upload success:', result.secure_url);
+                        resolve(result.secure_url);
+                    }
+                }
+            );
+            uploadStream.end(fileBuffer);
+        });
     } catch (error) {
-        fs.unlinkSync(file)
-        console.log(error)
+        console.error('uploadOnCloudinary error:', error);
+        throw error;
     }
-   
 }
 
 export default uploadOnCloudinary

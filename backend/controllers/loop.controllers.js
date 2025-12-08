@@ -6,11 +6,17 @@ import { getSocketId, io } from "../socket.js";
 
 export const uploadLoop=async (req,res)=>{
 try {
+    console.log('uploadLoop - userId:', req.userId);
+    console.log('uploadLoop - has file:', !!req.file);
+    
     const {caption}=req.body
     let media;
     if(req.file){
-        media=await uploadOnCloudinary(req.file.path)
+        console.log('Uploading loop to Cloudinary...');
+        media=await uploadOnCloudinary(req.file.buffer, req.file.mimetype)
+        console.log('Loop Cloudinary URL:', media);
     }else{
+        console.log('No file provided for loop');
         return res.status(400).json({message:"media is required"})
     }
     const loop=await Loop.create({
@@ -20,9 +26,11 @@ try {
     user.loops.push(loop._id)
     await user.save()
     const populatedLoop=await Loop.findById(loop._id).populate("author","name userName profileImage")
+    console.log('Loop created successfully');
     return res.status(201).json(populatedLoop)
 } catch (error) {
-    return res.status(500).json({message:`uploadloop error ${error}`})
+    console.error('uploadLoop error:', error);
+    return res.status(500).json({message:`uploadloop error ${error.message}`})
 }
 }
 
