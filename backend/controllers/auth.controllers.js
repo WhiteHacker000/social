@@ -29,11 +29,12 @@ export const signUp=async (req,res)=>{
 
         const token=await genToken(user._id)
 
+        // Set cookie with SameSite=None in production so cross-site POST requests (from frontend) include the cookie
         res.cookie("token",token,{
             httpOnly:true,
             maxAge:10*365*24*60*60*1000,
-            secure:process.env.NODE_ENV === "production",
-            sameSite:"lax"
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
         })
 
         return res.status(201).json(user)
@@ -60,11 +61,12 @@ export const signIn=async (req,res)=>{
 
         const token=await genToken(user._id)
 
+        // Ensure cookie will be sent from cross-origin frontend in production
         res.cookie("token",token,{
             httpOnly:true,
             maxAge:10*365*24*60*60*1000,
-            secure:process.env.NODE_ENV === "production",
-            sameSite:"lax"
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
         })
 
         return res.status(200).json(user)
@@ -77,7 +79,12 @@ export const signIn=async (req,res)=>{
 
 export const signOut=async (req,res)=>{
     try {
-        res.clearCookie("token")
+        // Clear cookie with same options so browser removes it correctly
+        res.clearCookie("token",{
+            httpOnly:true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+        })
         return res.status(200).json({message:"sign out successfully"})
     } catch (error) {
         return res.status(500).json({message:`signout error ${error}`})
